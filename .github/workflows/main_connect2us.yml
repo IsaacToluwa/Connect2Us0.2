@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2022
     permissions:
       contents: read #This is required for actions/checkout
 
@@ -21,7 +21,7 @@ jobs:
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.x'
+          dotnet-version: '8.x'
 
       - name: Build with dotnet
         run: dotnet build WebApplication1/WebApplication1.csproj --configuration Release
@@ -36,7 +36,7 @@ jobs:
           path: ${{env.DOTNET_ROOT}}/myapp
 
   deploy:
-    runs-on: windows-latest
+    runs-on: windows-2022
     needs: build
     permissions:
       id-token: write #This is required for requesting the JWT
@@ -61,5 +61,5 @@ jobs:
         with:
           app-name: 'Connect2Us'
           slot-name: 'Production'
-          package: .
+          package: .net-app
           
