@@ -26,7 +26,7 @@ namespace WebApplication1.Helpers
                     template = GenerateOrderStatusUpdate(placeholders);
                     break;
                 case "PasswordReset":
-                    template = GeneratePasswordReset(placeholders);
+                    template = GeneratePasswordResetEmail(placeholders);
                     break;
                 case "PasswordResetConfirmation":
                     template = GeneratePasswordResetConfirmation(placeholders);
@@ -113,14 +113,14 @@ namespace WebApplication1.Helpers
             return RenderViewToString("~/Views/EmailTemplates/OrderStatusUpdate.cshtml", placeholders);
         }
 
-        public static string GeneratePaymentReset(Dictionary<string, string> placeholders)
+        public static string GeneratePasswordReset(Dictionary<string, string> placeholders)
         {
-            return RenderViewToString("~/Views/EmailTemplates/PaymentReset.cshtml", placeholders);
+            return RenderViewToString("~/Views/EmailTemplates/PasswordReset.cshtml", placeholders);
         }
 
-        public static string GeneratePaymentResetConfirmation(Dictionary<string, string> placeholders)
+        public static string GeneratePasswordResetConfirmation(Dictionary<string, string> placeholders)
         {
-            return RenderViewToString("~/Views/EmailTemplates/PaymentResetConfirmation.cshtml", placeholders);
+            return RenderViewToString("~/Views/EmailTemplates/PasswordResetConfirmation.cshtml", placeholders);
         }
 
         public static string GeneratePasswordResetEmail(Dictionary<string, string> placeholders)
@@ -168,4 +168,7 @@ namespace WebApplication1.Helpers
             return RenderViewToString("~/Views/EmailTemplates/AdminAccountDetails.cshtml", placeholders);
         }
     }
+
+    // Add this EmptyController class
+    public class EmptyController : Controller { }
 }
