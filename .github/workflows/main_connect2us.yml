@@ -26,6 +26,9 @@ jobs:
       - name: Create publish directory
         run: mkdir ${{github.workspace}}/publish_output
 
+      - name: Print current working directory
+        run: pwd
+
       - name: Build with dotnet
         run: dotnet build WebApplication1/WebApplication1.csproj --configuration Release
 
@@ -33,7 +36,10 @@ jobs:
         run: dotnet publish WebApplication1/WebApplication1.csproj -c Release -o "${{github.workspace}}/publish_output"
 
       - name: Verify publish output
-        run: ls -R ${{github.workspace}}/publish_output
+        run: dir /s ${{github.workspace}}/publish_output
+
+      - name: Check dotnet publish exit code
+        run: if ($LASTEXITCODE -ne 0) { exit 1 }
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
