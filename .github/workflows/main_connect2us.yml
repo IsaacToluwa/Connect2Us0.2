@@ -32,6 +32,9 @@ jobs:
       - name: dotnet publish
         run: dotnet publish WebApplication1/WebApplication1.csproj -c Release -o "${{github.workspace}}/publish_output"
 
+      - name: Verify publish output
+        run: ls -R ${{github.workspace}}/publish_output
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
