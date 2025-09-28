@@ -1,0 +1,149 @@
+@model WebApplication1.ViewModels.RevenueReportViewModel
+@{
+    ViewBag.Title = "Revenue Reports";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">Revenue Reports</h2>
+            
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Generate Custom Report</h5>
+                        </div>
+                        <div class="card-body">
+                            @using (Html.BeginForm("GenerateReport", "Revenue", FormMethod.Post, new { @class = "row g-3" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <div class="col-md-4">
+                                    <label for="startDate" class="form-label">Start Date</label>
+                                    <input type="date" class="form-control" id="startDate" name="startDate" required />
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="endDate" class="form-label">End Date</label>
+                                    <input type="date" class="form-control" id="endDate" name="endDate" required />
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="reportType" class="form-label">Report Type</label>
+                                    <select class="form-select" id="reportType" name="reportType" required>
+                                        <option value="">Select Report Type</option>
+                                        <option value="Summary">Summary Report</option>
+                                        <option value="Detailed">Detailed Report</option>
+                                        <option value="Category">Category Breakdown</option>
+                                        <option value="Seller">Seller Performance</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-12">
+                                    <button type="submit" class="btn btn-primary">Generate Report</button>
+                                    @Html.ActionLink("Reset", "Reports", null, new { @class = "btn btn-secondary" })
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Quick Reports</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                @Html.ActionLink("Today's Report", "DailyReport", new { date = DateTime.Today }, new { @class = "btn btn-outline-primary" })
+                                @Html.ActionLink("Yesterday's Report", "DailyReport", new { date = DateTime.Today.AddDays(-1) }, new { @class = "btn btn-outline-primary" })
+                                @Html.ActionLink("This Month Report", "MonthlyReport", new { year = DateTime.Today.Year, month = DateTime.Today.Month }, new { @class = "btn btn-outline-success" })
+                                @Html.ActionLink("Last Month Report", "MonthlyReport", new { year = DateTime.Today.AddMonths(-1).Year, month = DateTime.Today.AddMonths(-1).Month }, new { @class = "btn btn-outline-success" })
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Analysis Reports</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                @Html.ActionLink("Category Performance", "CategoryReport", null, new { @class = "btn btn-outline-info" })
+                                @Html.ActionLink("Seller Performance", "SellerReport", null, new { @class = "btn btn-outline-info" })
+                                @Html.ActionLink("Year-over-Year Comparison", "YearlyComparison", null, new { @class = "btn btn-outline-warning" })
+                                @Html.ActionLink("Seasonal Analysis", "SeasonalAnalysis", null, new { @class = "btn btn-outline-warning" })
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (Model != null && Model.IsGenerated && Model.ReportData != null && Model.ReportData.Any())
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Generated Report</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <strong>Period:</strong> @Model.StartDate.ToString("yyyy-MM-dd") to @Model.EndDate.ToString("yyyy-MM-dd")
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Total Revenue:</strong> @Model.TotalRevenue.ToString("C")
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Total Orders:</strong> @Model.TotalOrders
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Total Books Sold:</strong> @Model.TotalBooksSold
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Period Type</th>
+                                        <th>Revenue</th>
+                                        <th>Orders</th>
+                                        <th>Books Sold</th>
+                                        <th>Avg Order Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.ReportData)
+                                    {
+                                        <tr>
+                                            <td>@item.Date.ToString("yyyy-MM-dd")</td>
+                                            <td>@item.PeriodType</td>
+                                            <td>@item.TotalRevenue.ToString("C")</td>
+                                            <td>@item.NumberOfOrders</td>
+                                            <td>@item.NumberOfBooksSold</td>
+                                            <td>@item.AverageOrderValue.ToString("C")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        $(document).ready(function() {
+            // Set default dates
+            var today = new Date();
+            var lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            
+            $('#startDate').val(lastWeek.toISOString().split('T')[0]);
+            $('#endDate').val(today.toISOString().split('T')[0]);
+        });
+    </script>
+}

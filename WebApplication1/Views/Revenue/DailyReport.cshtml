@@ -1,0 +1,151 @@
+@model WebApplication1.ViewModels.DailyRevenueReportViewModel
+@{
+    ViewBag.Title = "Daily Revenue Report";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Daily Revenue Report - @Model.ReportDate.ToString("yyyy-MM-dd")</h2>
+                <div>
+                    @Html.ActionLink("Previous Day", "DailyReport", new { date = Model.ReportDate.AddDays(-1) }, new { @class = "btn btn-outline-primary btn-sm me-2" })
+                    @Html.ActionLink("Next Day", "DailyReport", new { date = Model.ReportDate.AddDays(1) }, new { @class = "btn btn-outline-primary btn-sm me-2" })
+                    @Html.ActionLink("Back to Reports", "Reports", null, new { @class = "btn btn-secondary btn-sm" })
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card text-white bg-success">
+                        <div class="card-body">
+                            <h6 class="card-title">Total Revenue</h6>
+                            <h4>@Model.TotalRevenue.ToString("C")</h4>
+                            <small class="text-light">@Model.TotalOrders orders</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-white bg-info">
+                        <div class="card-body">
+                            <h6 class="card-title">Average Order Value</h6>
+                            <h4>@Model.AverageOrderValue.ToString("C")</h4>
+                            <small class="text-light">Per order</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-white bg-warning">
+                        <div class="card-body">
+                            <h6 class="card-title">Books Sold</h6>
+                            <h4>@Model.TotalBooksSold</h4>
+                            <small class="text-light">Units</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts removed - HourlyData and CategoryData properties not available in DailyRevenueReportViewModel -->
+            <!-- <div class="row">
+                <div class="col-md-8">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Hourly Revenue Breakdown</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="hourlyChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Category Breakdown</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="categoryChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div> -->
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Revenue Data Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.RevenueData != null && Model.RevenueData.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Total Revenue</th>
+                                                <th>Number of Orders</th>
+                                                <th>Books Sold</th>
+                                                <th>Avg Order Value</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var revenue in Model.RevenueData)
+                                            {
+                                                <tr>
+                                                    <td>@revenue.Date.ToString("yyyy-MM-dd")</td>
+                                                    <td>@revenue.TotalRevenue.ToString("C")</td>
+                                                    <td>@revenue.NumberOfOrders</td>
+                                                    <td>@revenue.NumberOfBooksSold</td>
+                                                    <td>@revenue.AverageOrderValue.ToString("C")</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted">No revenue data available for this date.</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Revenue Details for @Model.ReportDate.ToString("yyyy-MM-dd")</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Summary Statistics</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>Report Date:</strong> @Model.ReportDate.ToString("yyyy-MM-dd")</li>
+                                <li><strong>Total Revenue:</strong> @Model.TotalRevenue.ToString("C")</li>
+                                <li><strong>Total Orders:</strong> @Model.TotalOrders</li>
+                                <li><strong>Total Books Sold:</strong> @Model.TotalBooksSold</li>
+                                <li><strong>Average Order Value:</strong> @Model.AverageOrderValue.ToString("C")</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Data Records</h6>
+                            <p>Found @(Model.RevenueData != null ? Model.RevenueData.Count : 0) revenue records for this date.</p>
+                            <p class="text-muted">
+                                Revenue data is automatically calculated from order information and stored in daily summaries.
+                            </p>
+                        </div>
+                    </div>
+                    {
+                        <p class="text-muted">No orders found for this date.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Chart scripts removed - HourlyData and CategoryData properties not available in DailyRevenueReportViewModel -->
+}

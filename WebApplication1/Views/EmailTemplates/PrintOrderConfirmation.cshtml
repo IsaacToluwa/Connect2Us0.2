@@ -1,0 +1,24 @@
+<html>
+                <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
+                    <div style='max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;'>
+                        <h2 style='color: #2c3e50; text-align: center;'>Print Order Confirmation</h2>
+                        <p>Hello {customerFirstName},</p>
+                        <p>Thank you for your print order! We have received your request and will begin processing it shortly.</p>
+                        
+                        <div style='background-color: #f8f9fa; border: 1px solid #ddd; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+                            <h3 style='margin-top: 0; color: #2c3e50;'>Print Order Summary</h3>
+                            <p><strong>Print Request ID:</strong> #{printRequestId}</p>
+                            <p><strong>Book Title:</strong> {bookTitle}</p>
+                            <p><strong>Quantity:</strong> {quantity}</p>
+                            <p><strong>Format:</strong> {format}</p>
+                            <p><strong>Estimated Cost:</strong> R{estimatedCost}</p>
+                        </div>
+
+                        <p>We will notify you once your print order is complete and ready for pickup or shipping.</p>
+                        <p>Thank you for choosing Connect2us for your printing needs!</p>
+                        
+                        <hr style='border: 1px solid #eee; margin: 30px 0;'>
+                        <p style='text-align: center; font-size: 0.9em; color: #777;'>&copy; @DateTime.Now.Year Connect2us. All rights reserved.</p>
+                    </div>
+                </body>
+            </html>

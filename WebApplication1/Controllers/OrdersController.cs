@@ -1,0 +1,320 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web.Mvc;
+using WebApplication1.Models;
+using WebApplication1.ViewModels;
+using WebApplication1.Services;
+using WebApplication1.Helpers;
+using System.Threading.Tasks;
+
+namespace WebApplication1.Controllers
+{
+    [Authorize]
+    public class OrdersController : BaseController
+    {
+        private readonly NotificationService _notificationService;
+
+        public OrdersController()
+        {
+            _notificationService = new NotificationService(Db);
+        }
+        // GET: Orders
+        public ActionResult Index()
+        {
+            var currentUser = CurrentUser;
+            IQueryable<Order> orders;
+
+            if (currentUser.Role == UserRole.Admin.ToString() || currentUser.Role == UserRole.Employee.ToString())
+            {
+                // Admins and Employees can see all orders
+                orders = Db.Orders
+                    .Include("Customer")
+                    .Include("OrderItems")
+                    .OrderByDescending(o => o.OrderDate);
+            }
+            else if (currentUser.Role == UserRole.Seller.ToString())
+            {
+                // Sellers can see orders for their books
+                orders = Db.Orders
+                    .Include("Customer")
+                    .Include("OrderItems")
+                    .Where(o => o.OrderItems.Any(oi => oi.Book.SellerId == currentUser.UserId))
+                    .OrderByDescending(o => o.OrderDate);
+            }
+            else
+            {
+                // Customers can see only their orders
+                orders = Db.Orders
+                    .Include("OrderItems")
+                    .Where(o => o.CustomerId == currentUser.UserId)
+                    .OrderByDescending(o => o.OrderDate);
+            }
+
+            return View(orders.ToList());
+        }
+
+        // GET: Orders/Details/5
+        public ActionResult Details(int? id)
+        {
+            if (id == null)
+            {
+                return RedirectToAction("Index");
+            }
+
+            var currentUser = CurrentUser;
+            var order = Db.Orders
+                .Include("Customer")
+                .Include("OrderItems")
+                .FirstOrDefault(o => o.OrderId == id);
+
+            if (order == null)
+            {
+                return HttpNotFound();
+            }
+
+            // Check if user has permission to view this order
+            if (currentUser.Role == UserRole.Customer.ToString() && order.CustomerId != currentUser.UserId)
+            {
+                return new HttpUnauthorizedResult();
+            }
+
+            if (currentUser.Role == UserRole.Seller.ToString())
+            {
+                if (!order.OrderItems.Any(oi => oi.Book.SellerId == currentUser.UserId))
+                {
+                    return new HttpUnauthorizedResult();
+                }
+            }
+
+            return View(order);
+        }
+
+        // GET: Orders/OrderConfirmation/5
+        public ActionResult OrderConfirmation(int? orderId)
+        {
+            if (orderId == null)
+            {
+                return RedirectToAction("Index");
+            }
+
+            var currentUser = CurrentUser;
+            var order = Db.Orders
+                .Include("Customer")
+                .Include("OrderItems")
+                .FirstOrDefault(o => o.OrderId == orderId && o.CustomerId == currentUser.UserId);
+
+            if (order == null)
+            {
+                return HttpNotFound();
+            }
+
+            return View(order);
+        }
+
+        // POST: Orders/UpdateOrderStatus
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AdminOrEmployee]
+        public async Task<ActionResult> UpdateOrderStatus(int orderId, OrderStatus newStatus)
+        {
+            var order = Db.Orders.Find(orderId);
+            if (order == null)
+            {
+                return Json(new { success = false, message = "Order not found." });
+            }
+
+            var oldStatus = order.OrderStatus;
+            order.OrderStatus = newStatus.ToString();
+            
+            // Update payment status if order is delivered
+            if (newStatus.ToString() == OrderStatus.Delivered.ToString())
+            {
+                order.PaymentStatus = PaymentStatus.Paid.ToString();
+            }
+
+            Db.SaveChanges();
+
+            // Create notification for customer about order status update
+            try
+            {
+                var customer = Db.Users.Find(order.CustomerId);
+                if (customer != null)
+                {
+                    var placeholders = new Dictionary<string, string>
+                    {
+                        { "UserName", customer.FirstName },
+                        { "OrderNumber", order.OrderNumber },
+                        { "OldStatus", oldStatus.ToString() },
+                        { "NewStatus", newStatus.ToString() },
+                        { "OrderLink", Url.Action("Details", "Orders", new { id = order.OrderId }, Request.Url.Scheme) }
+                    };
+                    await _notificationService.SendTemplatedNotificationAsync(customer.UserId, "OrderStatusUpdate", placeholders);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't fail the order update
+                System.Diagnostics.Debug.WriteLine($"Failed to create notification: {ex.Message}");
+            }
+
+            return Json(new { success = true, message = "Order status updated successfully." });
+        }
+
+        // POST: Orders/UpdatePaymentStatus
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AdminOrEmployee]
+        public async Task<ActionResult> UpdatePaymentStatus(int orderId, PaymentStatus newStatus)
+        {
+            var order = Db.Orders.Find(orderId);
+            if (order == null)
+            {
+                return Json(new { success = false, message = "Order not found." });
+            }
+
+            var oldStatus = order.PaymentStatus;
+            order.PaymentStatus = newStatus.ToString();
+            Db.SaveChanges();
+
+            // Create notification for customer about payment status update
+            try
+            {
+                var customer = Db.Users.Find(order.CustomerId);
+                if (customer != null)
+                {
+                    var placeholders = new Dictionary<string, string>
+                    {
+                        { "UserName", customer.FirstName },
+                        { "OrderNumber", order.OrderNumber },
+                        { "OldStatus", oldStatus.ToString() },
+                        { "NewStatus", newStatus.ToString() },
+                        { "OrderLink", Url.Action("Details", "Orders", new { id = order.OrderId }, Request.Url.Scheme) }
+                    };
+                    await _notificationService.SendTemplatedNotificationAsync(customer.UserId, "PaymentStatusUpdate", placeholders);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't fail the payment update
+                System.Diagnostics.Debug.WriteLine($"Failed to create notification: {ex.Message}");
+            }
+
+            return Json(new { success = true, message = "Payment status updated successfully." });
+        }
+
+        // GET: Orders/Manage
+        [AdminOrEmployee]
+        public ActionResult Manage()
+        {
+            var orders = Db.Orders
+                .Include("Customer")
+                .Include("OrderItems")
+                .OrderByDescending(o => o.OrderDate)
+                .ToList();
+
+            return View(orders);
+        }
+
+        // GET: Orders/PendingOrders
+        [AdminOrEmployee]
+        public ActionResult PendingOrders()
+        {
+            var pendingOrders = Db.Orders
+                .Include("Customer")
+                .Include("OrderItems")
+                .Where(o => o.OrderStatus == OrderStatus.Pending.ToString())
+                .OrderBy(o => o.OrderDate)
+                .ToList();
+
+            return View(pendingOrders);
+        }
+
+        // GET: Orders/ShippedOrders
+        [AdminOrEmployee]
+        public ActionResult ShippedOrders()
+        {
+            var shippedOrders = Db.Orders
+                .Include("Customer")
+                .Include("OrderItems")
+                .Where(o => o.OrderStatus == OrderStatus.Shipped.ToString())
+                .OrderByDescending(o => o.OrderDate)
+                .ToList();
+
+            return View(shippedOrders);
+        }
+
+        // POST: Orders/CancelOrder
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult CancelOrder(int orderId)
+        {
+            var currentUser = CurrentUser;
+            var order = Db.Orders
+                .Include("OrderItems")
+                .FirstOrDefault(o => o.OrderId == orderId);
+
+            if (order == null)
+            {
+                return Json(new { success = false, message = "Order not found." });
+            }
+
+            // Check if user has permission to cancel this order
+            if (currentUser.Role == UserRole.Customer.ToString() && order.CustomerId != currentUser.UserId)
+            {
+                return Json(new { success = false, message = "You don't have permission to cancel this order." });
+            }
+
+            // Only allow cancellation of pending orders
+            if (order.OrderStatus != OrderStatus.Pending.ToString())
+            {
+                return Json(new { success = false, message = "Only pending orders can be cancelled." });
+            }
+
+            // Restore book stock
+            foreach (var orderItem in order.OrderItems)
+            {
+                var book = Db.Books.Find(orderItem.BookId);
+                if (book != null)
+                {
+                    book.StockQuantity += orderItem.Quantity;
+                }
+            }
+
+            order.OrderStatus = OrderStatus.Cancelled.ToString();
+            order.PaymentStatus = PaymentStatus.Refunded.ToString();
+            Db.SaveChanges();
+
+            return Json(new { success = true, message = "Order cancelled successfully." });
+        }
+
+        // GET: Orders/OrderHistory
+        public ActionResult OrderHistory()
+        {
+            var currentUser = CurrentUser;
+            var orders = Db.Orders
+                .Include("OrderItems")
+                .Where(o => o.CustomerId == currentUser.UserId)
+                .OrderByDescending(o => o.OrderDate)
+                .ToList();
+
+            return View(orders);
+        }
+
+        // GET: Orders/SellerOrders
+        [SellerOnly]
+        public ActionResult SellerOrders()
+        {
+            var currentUser = CurrentUser;
+            
+            var orders = Db.Orders
+                .Include("Customer")
+                .Include("OrderItems")
+                .Where(o => o.OrderItems.Any(oi => oi.Book.SellerId == currentUser.UserId))
+                .OrderByDescending(o => o.OrderDate)
+                .ToList();
+
+            return View(orders);
+        }
+    }
+}

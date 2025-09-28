@@ -1,0 +1,248 @@
+@model WebApplication1.ViewModels.CategoryReportViewModel
+@{
+    ViewBag.Title = "Category Performance Report";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Category Performance Report</h2>
+                <div>
+                    @Html.ActionLink("Export PDF", "ExportCategoryReport", new { startDate = Model.StartDate, endDate = Model.EndDate }, new { @class = "btn btn-danger btn-sm me-2" })
+                    @Html.ActionLink("Back to Reports", "Reports", null, new { @class = "btn btn-secondary btn-sm" })
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Report Period: @Model.StartDate.ToString("yyyy-MM-dd") to @Model.EndDate.ToString("yyyy-MM-dd")</h5>
+                        </div>
+                        <div class="card-body">
+                            @using (Html.BeginForm("CategoryReport", "Revenue", FormMethod.Get, new { @class = "row g-3" }))
+                            {
+                                <div class="col-md-4">
+                                    <label for="startDate" class="form-label">Start Date</label>
+                                    <input type="date" class="form-control" id="startDate" name="startDate" value="@Model.StartDate.ToString("yyyy-MM-dd")" required />
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="endDate" class="form-label">End Date</label>
+                                    <input type="date" class="form-control" id="endDate" name="endDate" value="@Model.EndDate.ToString("yyyy-MM-dd")" required />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">&nbsp;</label>
+                                    <div>
+                                        <button type="submit" class="btn btn-primary me-2">Update Report</button>
+                                        <button type="button" class="btn btn-outline-secondary" onclick="setCurrentMonth()">Current Month</button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Category Revenue Distribution</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="categoryPieChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Category Performance Trend</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="categoryTrendChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Category Performance Summary</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.CategoryData != null && Model.CategoryData.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Category</th>
+                                        <th>Revenue</th>
+                                        <th>Orders</th>
+                                        <th>Books Sold</th>
+                                        <th>Avg Order Value</th>
+                                        <th>Market Share</th>
+                                        <th>Growth</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var category in Model.CategoryData.OrderByDescending(c => c.TotalRevenue))
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong>@category.Category</strong>
+                                            </td>
+                                            <td>@category.TotalRevenue.ToString("C")</td>
+                                            <td>@category.NumberOfOrders</td>
+                                            <td>@category.NumberOfBooksSold</td>
+                                            <td>@((category.NumberOfOrders > 0 ? category.TotalRevenue / category.NumberOfOrders : 0).ToString("C"))</td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar" role="progressbar" style="width: @(category.PercentageOfTotal)%">
+                                                        @category.PercentageOfTotal.ToString("F1")%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="text-muted">N/A</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No category data available for the selected period.</p>
+                    }
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Category Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <h6>Total Revenue</h6>
+                                <p class="text-success">
+                                    <strong>@Model.TotalRevenue.ToString("C")</strong>
+                                </p>
+                            </div>
+                            <div class="mb-3">
+                                <h6>Total Books Sold</h6>
+                                <p class="text-info">
+                                    <strong>@Model.TotalBooksSold</strong>
+                                </p>
+                            </div>
+                            <div class="mb-3">
+                                <h6>Top Category</h6>
+                                <p class="text-primary">
+                                    <strong>@Model.TopCategory</strong> - @Model.TopCategoryRevenue.ToString("C")
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Report Period</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <h6>Start Date</h6>
+                                <p class="text-info">
+                                    <strong>@Model.StartDate.ToString("MM/dd/yyyy")</strong>
+                                </p>
+                            </div>
+                            <div class="mb-3">
+                                <h6>End Date</h6>
+                                <p class="text-info">
+                                    <strong>@Model.EndDate.ToString("MM/dd/yyyy")</strong>
+                                </p>
+                            </div>
+                            <div class="mb-3">
+                                <h6>Number of Categories</h6>
+                                <p class="text-primary">
+                                    <strong>@(Model.CategoryData != null ? Model.CategoryData.Count : 0)</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Category Pie Chart
+            var ctx = document.getElementById('categoryPieChart').getContext('2d');
+            var categoryPieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: @Html.Raw(Json.Encode(Model.CategoryData != null ? Model.CategoryData.Select(c => c.Category) : new List<string>())),
+                    datasets: [{
+                        data: @Html.Raw(Json.Encode(Model.CategoryData != null ? Model.CategoryData.Select(c => c.TotalRevenue) : new List<decimal>())),
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(54, 162, 235, 0.8)',
+                            'rgba(255, 205, 86, 0.8)',
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(153, 102, 255, 0.8)',
+                            'rgba(255, 159, 64, 0.8)',
+                            'rgba(199, 199, 199, 0.8)',
+                            'rgba(83, 102, 255, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Category Trend Chart
+            var ctx2 = document.getElementById('categoryTrendChart').getContext('2d');
+            var categoryTrendChart = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: []
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+        function setCurrentMonth() {
+            var today = new Date();
+            var firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            var lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            
+            document.getElementById('startDate').value = firstDay.toISOString().split('T')[0];
+            document.getElementById('endDate').value = lastDay.toISOString().split('T')[0];
+        }
+    </script>
+}
