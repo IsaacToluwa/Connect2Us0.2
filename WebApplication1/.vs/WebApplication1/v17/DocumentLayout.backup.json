@@ -3,10 +3,6 @@
   "WorkspaceRootPath": "C:\\Users\\olatu\\source\\repos\\Connect2Us0.2\\WebApplication1\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{EE084333-88A6-4C14-A3DD-61CA69B37A2D}|WebApplication1.csproj|c:\\users\\olatu\\source\\repos\\connect2us0.2\\webapplication1\\web.debug.config||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
-      "RelativeMoniker": "D:0:0:{EE084333-88A6-4C14-A3DD-61CA69B37A2D}|WebApplication1.csproj|solutionrelative:web.debug.config||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\olatu\\AppData\\Local\\Temp\\VSProjectConfigWarningLog_8c2db509-4a99-4e58-92c1-5d370d585c28.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
     }
   ],
@@ -34,19 +30,6 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "Web.Debug.config",
-              "DocumentMoniker": "C:\\Users\\olatu\\source\\repos\\Connect2Us0.2\\WebApplication1\\Web.Debug.config",
-              "RelativeDocumentMoniker": "Web.Debug.config",
-              "ToolTip": "C:\\Users\\olatu\\source\\repos\\Connect2Us0.2\\WebApplication1\\Web.Debug.config",
-              "RelativeToolTip": "Web.Debug.config",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000601|",
-              "WhenOpened": "2025-09-29T00:00:54.121Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
               "Title": "VSProjectConfigWarningLog_8c2db509-4a99-4e58-92c1-5d370d585c28.txt",
               "DocumentMoniker": "C:\\Users\\olatu\\AppData\\Local\\Temp\\VSProjectConfigWarningLog_8c2db509-4a99-4e58-92c1-5d370d585c28.txt",
               "RelativeDocumentMoniker": "..\\..\\..\\..\\AppData\\Local\\Temp\\VSProjectConfigWarningLog_8c2db509-4a99-4e58-92c1-5d370d585c28.txt",
